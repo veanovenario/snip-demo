@@ -1,0 +1,47 @@
+<div class="snip-app">
+  <h1>Snip</h1>
+
+  <form class="shorten-form" (ngSubmit)="submit()">
+    <input
+      type="text"
+      placeholder="Paste a URL (http:// or https://)"
+      [(ngModel)]="inputUrl"
+      name="url"
+      [disabled]="submitting()"
+      autocomplete="off"
+    />
+    <button type="submit" [disabled]="submitting()">Shorten</button>
+  </form>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (result(); as link) {
+    <p class="success">
+      Short link:
+      <a [href]="link.shortUrl" target="_blank" rel="noopener">{{ link.shortUrl }}</a>
+    </p>
+  }
+
+  @if (links().length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Original URL</th>
+          <th>Hits</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (link of links(); track link.code) {
+          <tr>
+            <td><a [href]="link.shortUrl" target="_blank" rel="noopener">{{ link.code }}</a></td>
+            <td class="url-cell">{{ link.url }}</td>
+            <td>{{ link.hits }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
