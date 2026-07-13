@@ -1,0 +1,41 @@
+name: Build bundle
+
+# A push trigger is intentionally absent here.
+# This workflow file only exists on the main branch; a "push" trigger would
+# therefore only fire when main is pushed — it would NEVER fire when the
+# backend, frontend, or cli branches receive new commits.
+# The hourly schedule catches those upstream changes automatically, and
+# workflow_dispatch lets you trigger an immediate rebuild at any time.
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # every hour on the hour (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to push the bundle branch and bump the pointer
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0          # full history so submodule advances are visible
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build and push bundle
+        run: node scripts/build-bundle.mjs --push
