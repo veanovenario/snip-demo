@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Unix wrapper — forward all arguments to cli.js
+dir="$(cd "$(dirname "$0")" && pwd)"
+exec node "$dir/cli.js" "$@"
