@@ -7,7 +7,10 @@ branch and mounted here as a Git submodule.
 snip-demo (main)
 ├── backend/    ← branch: backend  — Node/Express API
 ├── frontend/   ← branch: frontend — Angular 19 SPA
-└── cli/        ← branch: cli      — zero-dependency Node CLI
+├── cli/        ← branch: cli      — zero-dependency Node CLI
+├── bundle/     ← branch: bundle   — GENERATED: server + SPA + CLI in one folder
+└── scripts/
+    └── build-bundle.mjs            — assembles and publishes bundle/
 ```
 
 ---
@@ -145,3 +148,39 @@ git add .
 git commit -m "chore: bump all submodules"
 git push
 ```
+
+---
+
+## Building the bundle (single-process deploy)
+
+`bundle/` is a **generated** submodule — never edit it by hand.
+The script `scripts/build-bundle.mjs` (Node ≥ 18, zero deps):
+
+1. Advances `backend`, `frontend`, and `cli` submodules to their branch tips
+2. Builds the Angular SPA (`ng build`) and verifies `index.html` exists
+3. Copies `server.js`, `cli.js`, and `public/` into `bundle/`
+4. Writes `bundle/.env`, `bundle/package.json`, `bundle/Dockerfile`,
+   `bundle/.dockerignore`, and `bundle/railway.json`
+5. Commits inside `bundle/` and bumps the pointer in the superproject —
+   both guarded as **safe no-ops** when nothing changed
+
+```bash
+# Assemble locally (no network writes)
+node scripts/build-bundle.mjs
+
+# Assemble, commit, and push both bundle branch and main
+node scripts/build-bundle.mjs --push
+```
+
+### Running the bundle locally
+
+```bash
+cd bundle
+# With Bun (reads .env automatically → serves the SPA too)
+bun server.js
+
+# With Node (SPA not served; backend-only mode)
+node server.js
+```
+
+Open `http://localhost:3000` — the Angular UI is served from `public/`.
